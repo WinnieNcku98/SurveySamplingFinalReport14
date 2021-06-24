@@ -1,0 +1,11 @@
+name: "Survey Sampling Final report"
+navbar:
+  title:"Survey Sampling"
+  left:
+    -text:"Question1"
+     href: P1.html
+    -text:"Question4"
+     href: P4.html
+     
+output:
+  html_document:

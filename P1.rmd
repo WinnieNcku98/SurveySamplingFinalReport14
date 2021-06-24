@@ -1,0 +1,123 @@
+---
+title: "Question_1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+set.seed(61236)
+# N: population size
+# n : sample size
+# iter : number of iteratrions
+N=10000
+n=100
+B= 1000
+x=rpois(N,100)
+y=rpois(N,100)
+z=rpois(N,100)
+mux=mean(x)
+muy=mean(y)
+muz=mean(z)
+mu=mean(c(mux,muy,muz))
+sigma_x=var(x)
+var_ybar=((N-n)/N)*(1/n)*sigma_x # Var(y_bar)=(N-n)/N*(1/n)*sigma^2
+SD=var_ybar
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+A) 模擬 E(MSE)
+```{r pressure, echo=FALSE}
+set.seed(61236)
+G=3
+MSE = rep(NA, B)
+for (i in 1:B){
+ y1=rnorm(n=n, mean = mux, sd=SD)
+ y2=rnorm(n=n, mean = mux, sd=SD)
+ y3=rnorm(n=n, mean = mux, sd=SD)
+ SSE=sum(y1^2)+sum(y2^2)+sum(y3^2)-(sum(y1)^2+sum(y2)^2+sum(y3)^2)/n
+ MSE[i] = SSE/(G*(n-1))
+}
+sprintf('E(MSE)為%.2f',mean(MSE))
+
+```
+
+A)模擬 E(bias)
+```{r}
+set.seed(61236)
+G=3;
+me = rep(NA, B)
+for (i in 1:B){
+ y1=rnorm(n=n, mean = mux, sd=SD)
+ y2=rnorm(n=n, mean = muy, sd=SD)
+ y3=rnorm(n=n, mean = muz, sd=SD)
+ me[i]=(mean(y1)+mean(y2)+mean(y3))/G
+}
+sprintf('E(bias)為%.10f',mu-mean(me))
+```
+
+B)驗證E(MSE)相近於variance
+```{r}
+set.seed(61236)
+G=3;n=10;SD=5
+MSE = rep(NA, B)
+for (i in 1:B){
+ y1=rnorm(n=n, mean = 1, sd=SD)
+ y2=rnorm(n=n, mean = 1, sd=SD)
+ y3=rnorm(n=n, mean = 1, sd=SD)
+ SSE=sum(y1^2)+sum(y2^2)+sum(y3^2)-(sum(y1)^2+sum(y2)^2+sum(y3)^2)/n
+ MSE[i] = SSE/(G*(n-1))
+}
+sprintf('E(MSE)為%.2f,variance為%.0f,兩者相差%.3f',mean(MSE),SD^2,(SD^2)-mean(MSE))
+```
+
+驗證F值相近F分佈
+```{r}
+F.value=rep(NA,B)
+for (i in 1:B){
+ y1=rnorm(n=n, mean = mux, sd=SD)
+ y2=rnorm(n=n, mean = mux, sd=SD)
+ y3=rnorm(n=n, mean = mux, sd=SD)
+ SSE=sum(y1^2)+sum(y2^2)+sum(y3^2)-(sum(y1)^2+sum(y2)^2+sum(y3)^2)/n
+ SSTR =  (sum(y1)^2+sum(y2)^2+sum(y3)^2)/n - (sum(y1+y2+y3))^2/(G*n)
+ MSTR = SSTR / (G-1)
+ MSE = SSE/(G*(n-1))
+ F.value[i]=MSTR/MSE
+}
+
+plot(density(F.value), lwd=3, col=1, main="", xlab="")
+curve(df(x, df1=(G-1), df2=(G*(n-1))),add=T, col=2, lwd=1.5)
+
+```
+
+
+
+驗證coefficient(x,y)和ρ的誤差值相近0
+```{r}
+b=rep(NA,B)
+p=muz/sqrt((mux+muy)*(muy+muz))
+for (i in 1:B){
+ x1=rpois(n=n, mux)
+ x2=rpois(n=n, muy)
+ x3=rpois(n=n, muz)
+ y1=x1+x3
+ y2=x2+x3
+ b[i]=cor(y1,y2)
+}
+plot(density(b), lwd=2, col=1, main=c(p,mean(b)), xlab="")
+par(new=TRUE)
+abline(v=p)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
